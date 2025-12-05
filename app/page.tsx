@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Hero } from "@/components/Hero";
 import { StepIndicator } from "@/components/StepIndicator";
 import { ImageUploader } from "@/components/ImageUploader";
 import { ProcessingStep } from "@/components/ProcessingStep";
+import { TransformConfirm } from "@/components/TransformConfirm";
 import { ResultPreview } from "@/components/ResultPreview";
+import { Id } from "@/convex/_generated/dataModel";
+import { toast } from "sonner";
 
 const steps = [
   { label: "Upload", icon: null },
@@ -15,30 +18,59 @@ const steps = [
   { label: "Preview", icon: null },
 ];
 
+type AppPhase =
+  | "upload"
+  | "transforming"
+  | "transform-confirm"
+  | "converting-3d"
+  | "preview";
+
 export default function Home() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [sourceImage, setSourceImage] = useState<string | null>(null);
-  const [transformedImage, setTransformedImage] = useState<string | null>(null);
+  const [phase, setPhase] = useState<AppPhase>("upload");
+  const [submissionId, setSubmissionId] = useState<Id<"submissions"> | null>(null);
 
-  const handleImageSelect = (image: string) => {
-    setSourceImage(image);
-    setCurrentStep(1);
-  };
+  // Map phase to step indicator
+  const currentStep =
+    phase === "upload"
+      ? 0
+      : phase === "transforming" || phase === "transform-confirm"
+        ? 1
+        : phase === "converting-3d"
+          ? 2
+          : 3;
 
-  const handleTransformComplete = (result: string) => {
-    setTransformedImage(result);
-    setCurrentStep(2);
-  };
+  const handleSubmissionCreated = useCallback((id: Id<"submissions">) => {
+    setSubmissionId(id);
+    setPhase("transforming");
+  }, []);
 
-  const handleConvert3DComplete = () => {
-    setCurrentStep(3);
-  };
+  const handleTransformComplete = useCallback(() => {
+    setPhase("transform-confirm");
+  }, []);
 
-  const handleStartOver = () => {
-    setCurrentStep(0);
-    setSourceImage(null);
-    setTransformedImage(null);
-  };
+  const handleTransformError = useCallback((error: string) => {
+    toast.error("Transformation failed", {
+      description: error,
+    });
+  }, []);
+
+  const handleConfirmTransform = useCallback(() => {
+    setPhase("converting-3d");
+  }, []);
+
+  const handleBackToUpload = useCallback(() => {
+    setPhase("upload");
+    setSubmissionId(null);
+  }, []);
+
+  const handleConvert3DComplete = useCallback(() => {
+    setPhase("preview");
+  }, []);
+
+  const handleStartOver = useCallback(() => {
+    setPhase("upload");
+    setSubmissionId(null);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -57,18 +89,18 @@ export default function Home() {
         </div>
 
         <AnimatePresence mode="wait">
-          {currentStep === 0 && (
+          {phase === "upload" && (
             <motion.div
               key="upload"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <ImageUploader onImageSelect={handleImageSelect} />
+              <ImageUploader onSubmissionCreated={handleSubmissionCreated} />
             </motion.div>
           )}
 
-          {currentStep === 1 && sourceImage && (
+          {phase === "transforming" && submissionId && (
             <motion.div
               key="transform"
               initial={{ opacity: 0, x: 20 }}
@@ -77,13 +109,29 @@ export default function Home() {
             >
               <ProcessingStep
                 type="transform"
-                sourceImage={sourceImage}
+                submissionId={submissionId}
                 onComplete={handleTransformComplete}
+                onError={handleTransformError}
               />
             </motion.div>
           )}
 
-          {currentStep === 2 && transformedImage && (
+          {phase === "transform-confirm" && submissionId && (
+            <motion.div
+              key="transform-confirm"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <TransformConfirm
+                submissionId={submissionId}
+                onConfirm={handleConfirmTransform}
+                onBack={handleBackToUpload}
+              />
+            </motion.div>
+          )}
+
+          {phase === "converting-3d" && submissionId && (
             <motion.div
               key="convert3d"
               initial={{ opacity: 0, x: 20 }}
@@ -92,13 +140,13 @@ export default function Home() {
             >
               <ProcessingStep
                 type="convert3d"
-                sourceImage={transformedImage}
+                submissionId={submissionId}
                 onComplete={handleConvert3DComplete}
               />
             </motion.div>
           )}
 
-          {currentStep === 3 && transformedImage && (
+          {phase === "preview" && submissionId && (
             <motion.div
               key="result"
               initial={{ opacity: 0, x: 20 }}
@@ -106,7 +154,7 @@ export default function Home() {
               exit={{ opacity: 0, x: -20 }}
             >
               <ResultPreview
-                transformedImage={transformedImage}
+                submissionId={submissionId}
                 onStartOver={handleStartOver}
               />
             </motion.div>
