@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Download, FileBox, Loader2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -23,7 +24,7 @@ export default function SubmissionPage() {
     if (submission?.modelUrls?.[format]) {
       const link = document.createElement("a");
       link.href = `/api/model/${submissionId}?format=${format}`;
-      link.download = `funko-pop-model.${format}`;
+      link.download = `figurine-model.${format}`;
       link.click();
     }
   };
@@ -36,7 +37,7 @@ export default function SubmissionPage() {
     if (url) {
       const link = document.createElement("a");
       link.href = url;
-      link.download = `funko-pop-${type}.png`;
+      link.download = `figurine-${type}.png`;
       link.click();
     }
   };
@@ -68,7 +69,6 @@ export default function SubmissionPage() {
     );
   }
 
-  console.log(`submission.modelUrls`, submission.modelUrls);
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Background effects */}
@@ -117,12 +117,13 @@ export default function SubmissionPage() {
                 <Download className="w-4 h-4" />
               </Button>
             </div>
-            <div className="aspect-square rounded-xl overflow-hidden bg-muted">
+            <div className="aspect-square rounded-xl overflow-hidden bg-muted relative">
               {submission.sourceImageUrl ? (
-                <img
+                <Image
                   src={submission.sourceImageUrl}
                   alt="Original photo"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -141,7 +142,7 @@ export default function SubmissionPage() {
           >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-display font-semibold text-foreground">
-                Funko Pop
+                Figurine
               </h3>
               <Button
                 variant="ghost"
@@ -152,12 +153,13 @@ export default function SubmissionPage() {
                 <Download className="w-4 h-4" />
               </Button>
             </div>
-            <div className="aspect-square rounded-xl overflow-hidden bg-muted">
+            <div className="aspect-square rounded-xl overflow-hidden bg-muted relative">
               {submission.resultImageUrl ? (
-                <img
+                <Image
                   src={submission.resultImageUrl}
-                  alt="Funko Pop version"
-                  className="w-full h-full object-cover"
+                  alt="Figurine version"
+                  fill
+                  className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -185,16 +187,19 @@ export default function SubmissionPage() {
               {submission.modelUrls?.glb ? (
                 <ModelViewer
                   src={`/api/model/${submissionId}?format=glb`}
-                  alt="Funko Pop 3D Model"
+                  alt="Figurine 3D Model"
                   poster={submission.meshThumbnailUrl}
                   className="w-full h-full"
                 />
               ) : submission.meshThumbnailUrl ? (
-                <img
-                  src={submission.meshThumbnailUrl}
-                  alt="3D Model Preview"
-                  className="w-full h-full object-cover"
-                />
+                <div className="relative w-full h-full">
+                  <Image
+                    src={submission.meshThumbnailUrl}
+                    alt="3D Model Preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <span className="text-muted-foreground">
@@ -312,7 +317,7 @@ export default function SubmissionPage() {
         <div className="mt-8 text-center">
           <Link href="/">
             <Button variant="hero" size="lg">
-              Create Your Own Funko Pop
+              Create Your Own Figurine
             </Button>
           </Link>
         </div>

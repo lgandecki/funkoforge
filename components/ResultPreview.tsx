@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { RotateCcw, Download, Share2, FileBox, Box } from "lucide-react";
+import Image from "next/image";
 import { useQuery } from "convex/react";
 import { Button } from "@/components/ui/button";
 import { ModelViewer } from "@/components/ModelViewer";
@@ -23,7 +24,7 @@ export const ResultPreview = ({
     if (submission?.resultImageUrl) {
       const link = document.createElement("a");
       link.href = submission.resultImageUrl;
-      link.download = "funko-pop.png";
+      link.download = "figurine.png";
       link.click();
     }
   };
@@ -32,7 +33,7 @@ export const ResultPreview = ({
     if (submission?.modelUrls?.[format]) {
       const link = document.createElement("a");
       link.href = `/api/model/${submissionId}?format=${format}`;
-      link.download = `funko-pop-model.${format}`;
+      link.download = `figurine-model.${format}`;
       link.click();
     }
   };
@@ -41,11 +42,11 @@ export const ResultPreview = ({
     if (navigator.share && submission?.resultImageUrl) {
       try {
         await navigator.share({
-          title: "My Funko Pop!",
-          text: "Check out my custom Funko Pop figurine created with FunkoForge!",
+          title: "My Figure!",
+          text: "Check out my custom figure created with GoFigure!",
           url: window.location.href,
         });
-      } catch (error) {
+      } catch {
         // User cancelled or share failed
         console.log("Share cancelled");
       }
@@ -72,14 +73,15 @@ export const ResultPreview = ({
         {/* Transformed Image */}
         <div className="glass-strong rounded-2xl p-6 space-y-4">
           <h3 className="text-lg font-display font-semibold text-foreground">
-            Your Funko Pop
+            Your Go Figure
           </h3>
-          <div className="aspect-square rounded-xl overflow-hidden bg-muted">
+          <div className="aspect-square rounded-xl overflow-hidden bg-muted relative">
             {submission.resultImageUrl ? (
-              <img
+              <Image
                 src={submission.resultImageUrl}
-                alt="Funko Pop version"
-                className="w-full h-full object-cover"
+                alt="Go Figure version"
+                fill
+                className="object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -98,16 +100,19 @@ export const ResultPreview = ({
             {submission.modelUrls?.glb ? (
               <ModelViewer
                 src={`/api/model/${submissionId}?format=glb`}
-                alt="Funko Pop 3D Model"
+                alt="Go Figure 3D Model"
                 poster={submission.meshThumbnailUrl}
                 className="w-full h-full"
               />
             ) : submission.meshThumbnailUrl ? (
-              <img
-                src={submission.meshThumbnailUrl}
-                alt="3D Model Preview"
-                className="w-full h-full object-cover"
-              />
+              <div className="relative w-full h-full">
+                <Image
+                  src={submission.meshThumbnailUrl}
+                  alt="3D Model Preview"
+                  fill
+                  className="object-cover"
+                />
+              </div>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-border">
                 <motion.div

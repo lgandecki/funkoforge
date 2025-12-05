@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import Image from "next/image";
 import { useQuery } from "convex/react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
@@ -46,7 +47,7 @@ export const TransformConfirm = ({
             Transformation Complete!
           </h3>
           <p className="text-sm text-muted-foreground">
-            Review your Funko Pop and continue to 3D conversion
+            Review your Go Figure and continue to 3D conversion
           </p>
         </div>
 
@@ -57,12 +58,13 @@ export const TransformConfirm = ({
             <p className="text-xs text-muted-foreground text-center uppercase tracking-wide font-medium">
               Original
             </p>
-            <div className="aspect-square rounded-xl overflow-hidden bg-muted">
+            <div className="aspect-square rounded-xl overflow-hidden bg-muted relative">
               {submission.sourceImageUrl ? (
-                <img
+                <Image
                   src={submission.sourceImageUrl}
                   alt="Original"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full animate-pulse" />
@@ -73,14 +75,15 @@ export const TransformConfirm = ({
           {/* Transformed */}
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground text-center uppercase tracking-wide font-medium">
-              Funko Pop
+              Go Figure
             </p>
-            <div className="aspect-square rounded-xl overflow-hidden bg-muted ring-2 ring-primary ring-offset-2 ring-offset-background">
+            <div className="aspect-square rounded-xl overflow-hidden bg-muted ring-2 ring-primary ring-offset-2 ring-offset-background relative">
               {submission.resultImageUrl ? (
-                <img
+                <Image
                   src={submission.resultImageUrl}
-                  alt="Funko Pop"
-                  className="w-full h-full object-cover"
+                  alt="Go Figure"
+                  fill
+                  className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full animate-pulse" />

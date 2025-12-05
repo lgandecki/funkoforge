@@ -3,12 +3,23 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
+const ALLOWED_FORMATS = ["glb", "fbx", "obj", "usdz"] as const;
+type ModelFormat = (typeof ALLOWED_FORMATS)[number];
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ submissionId: string }> }
 ) {
   const { submissionId } = await params;
-  const format = request.nextUrl.searchParams.get("format") || "glb";
+  const formatParam = request.nextUrl.searchParams.get("format") || "glb";
+
+  if (!ALLOWED_FORMATS.includes(formatParam as ModelFormat)) {
+    return NextResponse.json(
+      { error: `Format ${formatParam} not allowed` },
+      { status: 400 }
+    );
+  }
+  const format = formatParam as ModelFormat;
 
   try {
     // Fetch submission from Convex

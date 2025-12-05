@@ -4,10 +4,25 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: '5mb',
+      bodySizeLimit: "5mb",
     },
   },
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.convex.cloud",
+      },
+      {
+        protocol: "https",
+        hostname: "**.meshy.ai",
+      },
+      {
+        protocol: "https",
+        hostname: "assets.meshy.ai",
+      },
+    ],
+  },
 };
 
 export default withBotId(nextConfig);
