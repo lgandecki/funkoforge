@@ -2,6 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 import { Hero } from "@/components/Hero";
 import { StepIndicator } from "@/components/StepIndicator";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -27,7 +29,9 @@ type AppPhase =
 
 export default function Home() {
   const [phase, setPhase] = useState<AppPhase>("upload");
-  const [submissionId, setSubmissionId] = useState<Id<"submissions"> | null>(null);
+  const [submissionId, setSubmissionId] = useState<Id<"submissions"> | null>(
+    null,
+  );
 
   // Map phase to step indicator
   const currentStep =
@@ -73,7 +77,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -81,7 +85,7 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/3 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8 md:py-12">
+      <div className="relative z-10 container mx-auto px-4 py-8 md:py-12 flex-1 pb-24">
         <Hero />
 
         <div className="mb-12">
@@ -160,12 +164,81 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Process Preview - only show on upload phase */}
+        {phase === "upload" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8 mb-8"
+          >
+            <div className="flex items-center justify-center gap-2 md:gap-4">
+              {/* Step 1: Original */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden ring-1 ring-border">
+                  <Image
+                    src="/original.webp"
+                    alt="Original photo"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground">Photo</span>
+              </div>
+
+              <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground flex-shrink-0" />
+
+              {/* Step 2: 2D Figurine */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden ring-1 ring-primary/50">
+                  <Image
+                    src="/Figurine-2d.webp"
+                    alt="2D Figurine"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground">2D</span>
+              </div>
+
+              <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground flex-shrink-0" />
+
+              {/* Step 3: 3D Figurine */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden ring-2 ring-accent glow-accent">
+                  <Image
+                    src="/Figurine-3d.webp"
+                    alt="3D Figurine"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="text-xs text-accent font-medium">3D</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Footer */}
-      <footer className="relative z-10 mt-auto py-6 text-center">
+      <footer className="fixed bottom-0 left-0 right-0 z-10 py-4 text-center space-y-0.5 bg-gradient-to-t from-background via-background to-transparent">
         <p className="text-sm text-muted-foreground">
           Made with magic for collectors everywhere
+        </p>
+        <p className="text-xs text-muted-foreground">
+          by{" "}
+          <a
+            href="https://lgandecki.net"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Łukasz Gandecki
+          </a>
         </p>
       </footer>
     </div>
