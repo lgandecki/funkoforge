@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Hero } from "@/components/Hero";
 import { StepIndicator } from "@/components/StepIndicator";
 import { ImageUploader } from "@/components/ImageUploader";
 import { ProcessingStep } from "@/components/ProcessingStep";
 import { ResultPreview } from "@/components/ResultPreview";
+import { Id } from "@/convex/_generated/dataModel";
+import { toast } from "sonner";
 
 const steps = [
   { label: "Upload", icon: null },
@@ -17,28 +19,35 @@ const steps = [
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [sourceImage, setSourceImage] = useState<string | null>(null);
-  const [transformedImage, setTransformedImage] = useState<string | null>(null);
+  const [submissionId, setSubmissionId] = useState<Id<"submissions"> | null>(null);
+  const [transformedImageUrl, setTransformedImageUrl] = useState<string | null>(null);
 
-  const handleImageSelect = (image: string) => {
-    setSourceImage(image);
+  const handleSubmissionCreated = useCallback((id: Id<"submissions">) => {
+    setSubmissionId(id);
     setCurrentStep(1);
-  };
+  }, []);
 
-  const handleTransformComplete = (result: string) => {
-    setTransformedImage(result);
+  const handleTransformComplete = useCallback((resultImageUrl: string) => {
+    setTransformedImageUrl(resultImageUrl);
     setCurrentStep(2);
-  };
+  }, []);
 
-  const handleConvert3DComplete = () => {
+  const handleTransformError = useCallback((error: string) => {
+    toast.error("Transformation failed", {
+      description: error,
+    });
+    // Don't reset - let the user see the error in ProcessingStep
+  }, []);
+
+  const handleConvert3DComplete = useCallback(() => {
     setCurrentStep(3);
-  };
+  }, []);
 
-  const handleStartOver = () => {
+  const handleStartOver = useCallback(() => {
     setCurrentStep(0);
-    setSourceImage(null);
-    setTransformedImage(null);
-  };
+    setSubmissionId(null);
+    setTransformedImageUrl(null);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -64,11 +73,11 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <ImageUploader onImageSelect={handleImageSelect} />
+              <ImageUploader onSubmissionCreated={handleSubmissionCreated} />
             </motion.div>
           )}
 
-          {currentStep === 1 && sourceImage && (
+          {currentStep === 1 && submissionId && (
             <motion.div
               key="transform"
               initial={{ opacity: 0, x: 20 }}
@@ -77,13 +86,14 @@ export default function Home() {
             >
               <ProcessingStep
                 type="transform"
-                sourceImage={sourceImage}
+                submissionId={submissionId}
                 onComplete={handleTransformComplete}
+                onError={handleTransformError}
               />
             </motion.div>
           )}
 
-          {currentStep === 2 && transformedImage && (
+          {currentStep === 2 && submissionId && transformedImageUrl && (
             <motion.div
               key="convert3d"
               initial={{ opacity: 0, x: 20 }}
@@ -92,13 +102,13 @@ export default function Home() {
             >
               <ProcessingStep
                 type="convert3d"
-                sourceImage={transformedImage}
+                submissionId={submissionId}
                 onComplete={handleConvert3DComplete}
               />
             </motion.div>
           )}
 
-          {currentStep === 3 && transformedImage && (
+          {currentStep === 3 && submissionId && (
             <motion.div
               key="result"
               initial={{ opacity: 0, x: 20 }}
@@ -106,7 +116,7 @@ export default function Home() {
               exit={{ opacity: 0, x: -20 }}
             >
               <ResultPreview
-                transformedImage={transformedImage}
+                submissionId={submissionId}
                 onStartOver={handleStartOver}
               />
             </motion.div>

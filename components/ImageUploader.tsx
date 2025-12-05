@@ -2,21 +2,29 @@
 
 import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, Camera, X, Image as ImageIcon, Sparkles } from "lucide-react";
+import { Upload, Camera, X, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
 import Webcam from "react-webcam";
+import { useAction } from "next-safe-action/hooks";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { transformImageAction } from "@/app/actions/transform-image-action";
+import { Id } from "@/convex/_generated/dataModel";
+import { toast } from "sonner";
+import { getSessionIdClient } from "@/lib/session-client";
 
 interface ImageUploaderProps {
-  onImageSelect: (image: string) => void;
+  onSubmissionCreated: (submissionId: Id<"submissions">) => void;
 }
 
-export const ImageUploader = ({ onImageSelect }: ImageUploaderProps) => {
+export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { executeAsync } = useAction(transformImageAction);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -72,9 +80,30 @@ export const ImageUploader = ({ onImageSelect }: ImageUploaderProps) => {
     }
   }, []);
 
-  const handleConfirm = () => {
-    if (previewImage) {
-      onImageSelect(previewImage);
+  const handleConfirm = async () => {
+    if (!previewImage) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const sessionId = getSessionIdClient() || undefined;
+      const response = await executeAsync({
+        imageBase64: previewImage,
+        sessionId,
+      });
+
+      if (response?.data?.submissionId) {
+        onSubmissionCreated(response.data.submissionId);
+      } else if (response?.serverError) {
+        toast.error("Failed to start transformation", {
+          description: response.serverError,
+        });
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("Transform error:", error);
+      toast.error("Failed to start transformation");
+      setIsSubmitting(false);
     }
   };
 
@@ -141,20 +170,41 @@ export const ImageUploader = ({ onImageSelect }: ImageUploaderProps) => {
                 alt="Preview"
                 className="w-full h-full object-cover"
               />
-              <button
-                onClick={clearImage}
-                className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              {!isSubmitting && (
+                <button
+                  onClick={clearImage}
+                  className="absolute top-3 right-3 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
             <div className="flex gap-3 justify-center">
-              <Button variant="glass" size="lg" onClick={clearImage}>
+              <Button
+                variant="glass"
+                size="lg"
+                onClick={clearImage}
+                disabled={isSubmitting}
+              >
                 Choose Different
               </Button>
-              <Button variant="hero" size="lg" onClick={handleConfirm}>
-                <Sparkles className="w-5 h-5" />
-                Transform to Funko
+              <Button
+                variant="hero"
+                size="lg"
+                onClick={handleConfirm}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Transform to Funko
+                  </>
+                )}
               </Button>
             </div>
           </motion.div>
