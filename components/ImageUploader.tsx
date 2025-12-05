@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { getSessionIdClient } from "@/lib/session-client";
 
 interface ImageUploaderProps {
-  onSubmissionCreated: (submissionId: Id<"submissions">) => void;
+  onSubmissionCreated: (submissionId: Id<"submissions">, imageBase64: string) => void;
 }
 
 export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
@@ -94,7 +94,7 @@ export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
       });
 
       if (response?.data?.submissionId) {
-        onSubmissionCreated(response.data.submissionId);
+        onSubmissionCreated(response.data.submissionId, previewImage);
       } else if (response?.serverError) {
         toast.error("Failed to start transformation", {
           description: response.serverError,
@@ -142,16 +142,17 @@ export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
                 }}
               />
             </div>
-            <div className="flex gap-3 justify-center">
+            <div className="flex flex-col-reverse md:flex-row gap-3 justify-center">
               <Button
                 variant="glass"
                 size="lg"
                 onClick={() => setShowCamera(false)}
+                className="w-full md:w-auto"
               >
                 <X className="w-5 h-5" />
                 Cancel
               </Button>
-              <Button variant="hero" size="lg" onClick={capturePhoto}>
+              <Button variant="hero" size="lg" onClick={capturePhoto} className="w-full md:w-auto">
                 <Camera className="w-5 h-5" />
                 Capture
               </Button>
@@ -182,12 +183,13 @@ export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
                 </button>
               )}
             </div>
-            <div className="flex gap-3 justify-center">
+            <div className="flex flex-col-reverse md:flex-row gap-3 justify-center">
               <Button
                 variant="glass"
                 size="lg"
                 onClick={clearImage}
                 disabled={isSubmitting}
+                className="w-full md:w-auto"
               >
                 Choose Different
               </Button>
@@ -196,6 +198,7 @@ export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
                 size="lg"
                 onClick={handleConfirm}
                 disabled={isSubmitting}
+                className="w-full md:w-auto"
               >
                 {isSubmitting ? (
                   <>

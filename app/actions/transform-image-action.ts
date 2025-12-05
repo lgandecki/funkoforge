@@ -84,7 +84,7 @@ export const transformImageAction = actionClient
           // Run Replicate transformation
           const input = {
             prompt:
-              "Based on the passed picture create a 2d figurine in a style of funko pop model with white background that I will use for doing 2d -> 3d ai-based conversion. Add a flat circular base so it is easier to 3d print",
+              "Based on the passed picture create a 2d figurine in a style of funko pop model with white background that I will use for doing 2d -> 3d ai-based conversion. Make sure its full body and not just a head or a torso. It's ok if it's a few people too! Add a flat circular base so it is easier to 3d print",
             resolution: "2K",
             image_input: [sourceImageUrl],
             aspect_ratio: "1:1",
