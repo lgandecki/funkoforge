@@ -15,8 +15,8 @@ export const Hero = () => {
         transition={{ delay: 0.2 }}
       >
         <h1 className="text-4xl md:text-6xl font-display font-bold">
-          <span className="text-gradient">Funko</span>
-          <span className="text-foreground">Forge</span>
+          <span className="text-gradient">Go</span>
+          <span className="text-foreground">Figure</span>
         </h1>
       </motion.div>
       <motion.p
@@ -26,8 +26,8 @@ export const Hero = () => {
         className="text-lg md:text-xl text-muted-foreground max-w-md mx-auto"
       >
         Transform any photo into a{" "}
-        <span className="text-secondary font-semibold">collectible Funko Pop</span>{" "}
-        figurine with AI magic
+        <span className="text-secondary font-semibold">fun figurine</span> with
+        AI magic
       </motion.p>
     </motion.div>
   );

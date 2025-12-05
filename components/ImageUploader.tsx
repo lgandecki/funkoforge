@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, Camera, X, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
+import { Camera, X, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
+import Image from "next/image";
 import Webcam from "react-webcam";
 import { useAction } from "next-safe-action/hooks";
 import { Button } from "@/components/ui/button";
@@ -165,10 +166,12 @@ export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
             className="glass-strong rounded-2xl p-6 space-y-4"
           >
             <div className="relative aspect-square rounded-xl overflow-hidden">
-              <img
+              <Image
                 src={previewImage}
                 alt="Preview"
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                unoptimized
               />
               {!isSubmitting && (
                 <button
@@ -202,7 +205,7 @@ export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    Transform to Funko
+                    Transform to Figure
                   </>
                 )}
               </Button>
@@ -216,7 +219,7 @@ export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
             exit={{ opacity: 0, scale: 0.95 }}
             className={cn(
               "glass-strong rounded-2xl p-8 md:p-12 transition-all duration-300 cursor-pointer group",
-              isDragging && "border-primary glow-primary"
+              isDragging && "border-primary glow-primary",
             )}
             onDragEnter={handleDragIn}
             onDragLeave={handleDragOut}
@@ -237,7 +240,7 @@ export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
                   "w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300",
                   isDragging
                     ? "bg-primary/20 text-primary"
-                    : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                    : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
                 )}
                 animate={isDragging ? { scale: 1.1 } : { scale: 1 }}
               >

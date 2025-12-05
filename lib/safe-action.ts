@@ -10,15 +10,10 @@ export const actionClient = createSafeActionClient()
       return next();
     }
 
-    try {
-      const verification = await checkBotId();
+    const verification = await checkBotId();
 
-      if (verification.isBot) {
-        throw new Error("Bot detected. Access denied.");
-      }
-    } catch (error) {
-      // In case botid fails, log and continue in development
-      console.warn("BotId check failed:", error);
+    if (verification.isBot) {
+      throw new Error("Bot detected. Access denied.");
     }
 
     return next();
@@ -29,7 +24,9 @@ export const actionClient = createSafeActionClient()
       return next();
     }
 
-    const req = new Request("https://funkoforge.com", { headers: await headers() });
+    const req = new Request("https://gofigure.lgandecki.net", {
+      headers: await headers(),
+    });
 
     const decision = await aj.protect(req, { requested: 1 });
 

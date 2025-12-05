@@ -16,8 +16,9 @@ const orbitron = Orbitron({
 });
 
 export const metadata: Metadata = {
-  title: "FunkoForge - Transform Photos into Funko Pop Figurines",
-  description: "Transform any photo into a collectible Funko Pop figurine with AI magic",
+  title: "GoFigur - Transform Photos into Figurines",
+  description:
+    "Transform any photo into a collectible, 3d-printable figurine with AI magic",
   icons: {
     icon: "/favicon.ico",
   },

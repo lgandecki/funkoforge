@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Box, AlertCircle } from "lucide-react";
+import Image from "next/image";
 import { useQuery } from "convex/react";
 import { useAction } from "next-safe-action/hooks";
 import { api } from "@/convex/_generated/api";
@@ -34,9 +35,9 @@ export const ProcessingStep = ({
   const submission = useQuery(api.submissions.get, { id: submissionId });
 
   const isTransform = type === "transform";
-  const title = isTransform ? "Creating Your Funko Pop" : "Building 3D Model";
+  const title = isTransform ? "Creating Your Figure" : "Building 3D Model";
   const subtitle = isTransform
-    ? "AI is transforming your photo into a collectible masterpiece..."
+    ? "AI is transforming your photo into a memorable masterpiece..."
     : "Converting your figurine into a 3D printable model...";
 
   // Start mesh generation when in convert3d mode
@@ -49,10 +50,12 @@ export const ProcessingStep = ({
       !hasStartedMesh.current
     ) {
       hasStartedMesh.current = true;
-      startMeshGeneration({ submissionId: submissionId as string }).catch((error) => {
-        console.error("Failed to start mesh generation:", error);
-        onError?.(error.message || "Failed to start 3D conversion");
-      });
+      startMeshGeneration({ submissionId: submissionId as string }).catch(
+        (error) => {
+          console.error("Failed to start mesh generation:", error);
+          onError?.(error.message || "Failed to start 3D conversion");
+        },
+      );
     }
   }, [type, submission, submissionId, startMeshGeneration, onError]);
 
@@ -62,7 +65,11 @@ export const ProcessingStep = ({
 
     if (isTransform) {
       // Handle 2D transformation completion
-      if (submission.status === "completed" && submission.resultImageUrl && !hasCompleted) {
+      if (
+        submission.status === "completed" &&
+        submission.resultImageUrl &&
+        !hasCompleted
+      ) {
         setProgress(100);
         setHasCompleted(true);
         setTimeout(() => onComplete(), 500);
@@ -76,7 +83,10 @@ export const ProcessingStep = ({
       }
 
       // Simulate progress based on time elapsed for transform
-      if (submission.status === "pending" || submission.status === "processing") {
+      if (
+        submission.status === "pending" ||
+        submission.status === "processing"
+      ) {
         const duration = 60000;
         const interval = 100;
 
@@ -87,7 +97,8 @@ export const ProcessingStep = ({
           if (elapsed < duration * 0.8) {
             newProgress = (elapsed / (duration * 0.8)) * 90;
           } else {
-            newProgress = 90 + ((elapsed - duration * 0.8) / (duration * 0.5)) * 9;
+            newProgress =
+              90 + ((elapsed - duration * 0.8) / (duration * 0.5)) * 9;
           }
 
           newProgress = Math.min(newProgress, 99);
@@ -98,7 +109,11 @@ export const ProcessingStep = ({
       }
     } else {
       // Handle 3D mesh generation
-      if (submission.meshStatus === "completed" && submission.meshThumbnailUrl && !hasCompleted) {
+      if (
+        submission.meshStatus === "completed" &&
+        submission.meshThumbnailUrl &&
+        !hasCompleted
+      ) {
         setProgress(100);
         setHasCompleted(true);
         setTimeout(() => onComplete(), 500);
@@ -128,9 +143,7 @@ export const ProcessingStep = ({
     ? submission?.status === "failed"
     : submission?.meshStatus === "failed";
 
-  const errorMessage = isTransform
-    ? submission?.error
-    : submission?.meshError;
+  const errorMessage = isTransform ? submission?.error : submission?.meshError;
 
   if (isFailed) {
     return (
@@ -173,12 +186,13 @@ export const ProcessingStep = ({
         {/* Image Preview */}
         <div className="relative aspect-square max-w-xs mx-auto rounded-xl overflow-hidden">
           {previewImageUrl ? (
-            <img
+            <Image
               src={previewImageUrl}
               alt="Processing"
+              fill
               className={cn(
-                "w-full h-full object-cover transition-all duration-700",
-                progress > 50 && isTransform && "saturate-150 contrast-110"
+                "object-cover transition-all duration-700",
+                progress > 50 && isTransform && "saturate-150 contrast-110",
               )}
             />
           ) : (
@@ -218,7 +232,9 @@ export const ProcessingStep = ({
           <motion.div
             className={cn(
               "w-16 h-16 rounded-2xl flex items-center justify-center",
-              isTransform ? "bg-primary/20 text-primary" : "bg-accent/20 text-accent"
+              isTransform
+                ? "bg-primary/20 text-primary"
+                : "bg-accent/20 text-accent",
             )}
             animate={{
               scale: [1, 1.1, 1],
@@ -253,7 +269,7 @@ export const ProcessingStep = ({
             <span
               className={cn(
                 "font-semibold",
-                isTransform ? "text-primary" : "text-accent"
+                isTransform ? "text-primary" : "text-accent",
               )}
             >
               {Math.round(progress)}%
@@ -263,7 +279,7 @@ export const ProcessingStep = ({
             <motion.div
               className={cn(
                 "h-full rounded-full",
-                isTransform ? "bg-gradient-primary" : "bg-accent"
+                isTransform ? "bg-gradient-primary" : "bg-accent",
               )}
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
@@ -277,7 +293,7 @@ export const ProcessingStep = ({
           {(isTransform
             ? [
                 { label: "Analyzing facial features", threshold: 20 },
-                { label: "Applying Funko style", threshold: 50 },
+                { label: "Applying Fun style", threshold: 50 },
                 { label: "Refining details", threshold: 80 },
                 { label: "Finalizing artwork", threshold: 95 },
               ]
@@ -304,7 +320,7 @@ export const ProcessingStep = ({
                     ? isTransform
                       ? "bg-primary"
                       : "bg-accent"
-                    : "bg-muted-foreground/30"
+                    : "bg-muted-foreground/30",
                 )}
               />
               <span
@@ -312,7 +328,7 @@ export const ProcessingStep = ({
                   "transition-colors duration-300",
                   progress >= step.threshold
                     ? "text-foreground"
-                    : "text-muted-foreground"
+                    : "text-muted-foreground",
                 )}
               >
                 {step.label}
@@ -323,7 +339,7 @@ export const ProcessingStep = ({
                   animate={{ opacity: 1, scale: 1 }}
                   className={cn(
                     "ml-auto text-xs font-medium",
-                    isTransform ? "text-primary" : "text-accent"
+                    isTransform ? "text-primary" : "text-accent",
                   )}
                 >
                   ✓
