@@ -89,7 +89,7 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/3 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8 md:py-12 flex-1 pb-24">
+      <div className="relative z-10 container mx-auto px-4 py-8 md:py-12 flex-1">
         <Hero />
 
         <div className="mb-12">
@@ -230,7 +230,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 z-10 py-4 text-center space-y-0.5 bg-gradient-to-t from-background via-background to-transparent">
+      <footer className="relative z-10 py-6 text-center space-y-1">
         <p className="text-sm text-muted-foreground">
           Made with magic for collectors everywhere
         </p>
