@@ -248,10 +248,12 @@ export const ImageUploader = ({ onSubmissionCreated }: ImageUploaderProps) => {
               </motion.div>
               <div className="space-y-2">
                 <p className="text-lg font-semibold text-foreground">
-                  Drop your photo here
+                  <span className="hidden md:inline">Drop your photo here</span>
+                  <span className="md:hidden">Tap to select a photo</span>
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  or click to browse • PNG, JPG up to 10MB
+                  <span className="hidden md:inline">or click to browse • </span>
+                  PNG, JPG up to 10MB
                 </p>
               </div>
               <div className="flex items-center gap-4 w-full">
