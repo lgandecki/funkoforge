@@ -1,10 +1,17 @@
 import { initBotId } from "botid/client/core";
 
-initBotId({
-  protect: [
-    {
-      path: "/",
-      method: "POST",
-    },
-  ],
-});
+// Only initialize botid if crypto.subtle is available (not in all dev environments)
+if (typeof window !== "undefined" && window.crypto?.subtle) {
+  try {
+    initBotId({
+      protect: [
+        {
+          path: "/",
+          method: "POST",
+        },
+      ],
+    });
+  } catch (error) {
+    console.warn("BotId initialization failed:", error);
+  }
+}

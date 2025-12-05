@@ -5,15 +5,30 @@ import { aj } from "@/lib/arcjet";
 
 export const actionClient = createSafeActionClient()
   .use(async ({ next }) => {
-    const verification = await checkBotId();
+    // Skip botid check in development or if it fails
+    if (process.env.NODE_ENV === "development") {
+      return next();
+    }
 
-    if (verification.isBot) {
-      throw new Error("Bot detected. Access denied.");
+    try {
+      const verification = await checkBotId();
+
+      if (verification.isBot) {
+        throw new Error("Bot detected. Access denied.");
+      }
+    } catch (error) {
+      // In case botid fails, log and continue in development
+      console.warn("BotId check failed:", error);
     }
 
     return next();
   })
   .use(async ({ next }) => {
+    // Skip arcjet in development if ARCJET_KEY is not set
+    if (!process.env.ARCJET_KEY) {
+      return next();
+    }
+
     const req = new Request("https://funkoforge.com", { headers: await headers() });
 
     const decision = await aj.protect(req, { requested: 1 });

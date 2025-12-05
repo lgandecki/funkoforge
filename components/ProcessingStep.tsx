@@ -14,7 +14,7 @@ import { imageToMeshAction } from "@/app/actions/image-to-mesh-action";
 interface ProcessingStepProps {
   type: "transform" | "convert3d";
   submissionId: Id<"submissions">;
-  onComplete: (result: string) => void;
+  onComplete: () => void;
   onError?: (error: string) => void;
 }
 
@@ -65,7 +65,7 @@ export const ProcessingStep = ({
       if (submission.status === "completed" && submission.resultImageUrl && !hasCompleted) {
         setProgress(100);
         setHasCompleted(true);
-        setTimeout(() => onComplete(submission.resultImageUrl!), 500);
+        setTimeout(() => onComplete(), 500);
         return;
       }
 
@@ -101,7 +101,7 @@ export const ProcessingStep = ({
       if (submission.meshStatus === "completed" && submission.meshThumbnailUrl && !hasCompleted) {
         setProgress(100);
         setHasCompleted(true);
-        setTimeout(() => onComplete(submission.meshThumbnailUrl!), 500);
+        setTimeout(() => onComplete(), 500);
         return;
       }
 

@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { RotateCcw, Download, Share2, FileBox, Cube } from "lucide-react";
+import { RotateCcw, Download, Share2, FileBox, Box } from "lucide-react";
 import { useQuery } from "convex/react";
 import { Button } from "@/components/ui/button";
+import { ModelViewer } from "@/components/ModelViewer";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
@@ -28,12 +29,10 @@ export const ResultPreview = ({
   };
 
   const handleDownloadModel = (format: "glb" | "fbx" | "obj" | "usdz") => {
-    const url = submission?.modelUrls?.[format];
-    if (url) {
+    if (submission?.modelUrls?.[format]) {
       const link = document.createElement("a");
-      link.href = url;
+      link.href = `/api/model/${submissionId}?format=${format}`;
       link.download = `funko-pop-model.${format}`;
-      link.target = "_blank";
       link.click();
     }
   };
@@ -96,7 +95,14 @@ export const ResultPreview = ({
             3D Model Preview
           </h3>
           <div className="aspect-square rounded-xl overflow-hidden bg-muted/50">
-            {submission.meshThumbnailUrl ? (
+            {submission.modelUrls?.glb ? (
+              <ModelViewer
+                src={`/api/model/${submissionId}?format=glb`}
+                alt="Funko Pop 3D Model"
+                poster={submission.meshThumbnailUrl}
+                className="w-full h-full"
+              />
+            ) : submission.meshThumbnailUrl ? (
               <img
                 src={submission.meshThumbnailUrl}
                 alt="3D Model Preview"
@@ -115,7 +121,7 @@ export const ResultPreview = ({
                     ease: "linear",
                   }}
                 >
-                  <Cube className="w-full h-full text-muted-foreground opacity-30" />
+                  <Box className="w-full h-full text-muted-foreground opacity-30" />
                 </motion.div>
                 <p className="text-sm text-muted-foreground">
                   3D model preview
