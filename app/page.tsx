@@ -32,6 +32,7 @@ export default function Home() {
   const [submissionId, setSubmissionId] = useState<Id<"submissions"> | null>(
     null,
   );
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
   // Map phase to step indicator
   const currentStep =
@@ -43,8 +44,9 @@ export default function Home() {
           ? 2
           : 3;
 
-  const handleSubmissionCreated = useCallback((id: Id<"submissions">) => {
+  const handleSubmissionCreated = useCallback((id: Id<"submissions">, imageBase64: string) => {
     setSubmissionId(id);
+    setUploadedImageUrl(imageBase64);
     setPhase("transforming");
   }, []);
 
@@ -65,6 +67,7 @@ export default function Home() {
   const handleBackToUpload = useCallback(() => {
     setPhase("upload");
     setSubmissionId(null);
+    setUploadedImageUrl(null);
   }, []);
 
   const handleConvert3DComplete = useCallback(() => {
@@ -74,6 +77,7 @@ export default function Home() {
   const handleStartOver = useCallback(() => {
     setPhase("upload");
     setSubmissionId(null);
+    setUploadedImageUrl(null);
   }, []);
 
   return (
@@ -116,6 +120,7 @@ export default function Home() {
                 submissionId={submissionId}
                 onComplete={handleTransformComplete}
                 onError={handleTransformError}
+                initialImageUrl={uploadedImageUrl ?? undefined}
               />
             </motion.div>
           )}

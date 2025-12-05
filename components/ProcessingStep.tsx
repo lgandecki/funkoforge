@@ -17,6 +17,7 @@ interface ProcessingStepProps {
   submissionId: Id<"submissions">;
   onComplete: () => void;
   onError?: (error: string) => void;
+  initialImageUrl?: string;
 }
 
 export const ProcessingStep = ({
@@ -24,6 +25,7 @@ export const ProcessingStep = ({
   submissionId,
   onComplete,
   onError,
+  initialImageUrl,
 }: ProcessingStepProps) => {
   const [progress, setProgress] = useState(0);
   const [hasCompleted, setHasCompleted] = useState(false);
@@ -133,10 +135,10 @@ export const ProcessingStep = ({
     }
   }, [submission, onComplete, onError, isTransform, hasCompleted]);
 
-  // Derive image URL for preview
+  // Derive image URL for preview - use initialImageUrl as fallback for instant display
   const previewImageUrl = isTransform
-    ? submission?.sourceImageUrl
-    : submission?.resultImageUrl || submission?.meshThumbnailUrl;
+    ? submission?.sourceImageUrl || initialImageUrl
+    : submission?.resultImageUrl || submission?.meshThumbnailUrl || initialImageUrl;
 
   // Check for failure states
   const isFailed = isTransform

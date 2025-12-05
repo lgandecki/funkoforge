@@ -189,9 +189,9 @@ export const ResultPreview = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="flex flex-wrap justify-center gap-4 mt-8"
+        className="flex flex-col md:flex-row justify-center gap-3 mt-8"
       >
-        <Button variant="glass" size="lg" onClick={onStartOver}>
+        <Button variant="glass" size="lg" onClick={onStartOver} className="w-full md:w-auto">
           <RotateCcw className="w-5 h-5" />
           Create Another
         </Button>
@@ -200,11 +200,12 @@ export const ResultPreview = ({
           size="lg"
           onClick={handleDownloadImage}
           disabled={!submission.resultImageUrl}
+          className="w-full md:w-auto"
         >
           <Download className="w-5 h-5" />
           Download Image
         </Button>
-        <Button variant="secondary" size="lg" onClick={handleShare}>
+        <Button variant="secondary" size="lg" onClick={handleShare} className="w-full md:w-auto">
           <Share2 className="w-5 h-5" />
           Share
         </Button>
