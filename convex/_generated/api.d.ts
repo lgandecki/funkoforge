@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as meshPoller from "../meshPoller.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as submissions from "../submissions.js";
 
@@ -18,6 +19,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  meshPoller: typeof meshPoller;
   myFunctions: typeof myFunctions;
   submissions: typeof submissions;
 }>;
