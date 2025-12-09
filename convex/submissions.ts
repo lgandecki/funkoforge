@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 export const generateUploadUrl = mutation(async (ctx) => {
   return await ctx.storage.generateUploadUrl();
@@ -236,5 +237,179 @@ export const getByMeshyTaskId = query({
       .query("submissions")
       .withIndex("by_meshyTaskId", (q) => q.eq("meshyTaskId", meshyTaskId))
       .first();
+  },
+});
+
+// Get stuck submissions that need retry (browser disconnected)
+// A submission is "stuck" if it's been in processing state for too long
+export const getStuckSubmissions = query({
+  args: {
+    stuckThresholdMs: v.optional(v.number()), // Default 5 minutes
+  },
+  handler: async (ctx, args) => {
+    const threshold = args.stuckThresholdMs ?? 5 * 60 * 1000; // 5 minutes default
+    const cutoffTime = Date.now() - threshold;
+
+    const allSubmissions = await ctx.db.query("submissions").collect();
+
+    const stuckSubmissions = allSubmissions.filter((sub) => {
+      // Check if 2D transformation is stuck
+      const is2DStuck =
+        sub.status === "processing" && sub.createdAt < cutoffTime;
+
+      // Check if mesh generation is stuck (has meshyTaskId but not completed/failed)
+      const isMeshStuck =
+        sub.meshStatus === "processing" &&
+        sub.meshyTaskId &&
+        sub.createdAt < cutoffTime;
+
+      return is2DStuck || isMeshStuck;
+    });
+
+    return stuckSubmissions;
+  },
+});
+
+// Clone a submission (keeps sourceImageId, resultImageId, sessionId, userId)
+export const clone = mutation({
+  args: {
+    id: v.id("submissions"),
+  },
+  handler: async (ctx, args) => {
+    const original = await ctx.db.get(args.id);
+    if (!original) {
+      throw new Error("Submission not found");
+    }
+
+    const newSubmissionId = await ctx.db.insert("submissions", {
+      sourceImageId: original.sourceImageId,
+      sessionId: original.sessionId,
+      userId: original.userId,
+      // If original has resultImageId, copy it and mark as completed
+      ...(original.resultImageId
+        ? {
+            status: "completed",
+            resultImageId: original.resultImageId,
+            completedAt: Date.now(),
+          }
+        : {
+            status: "pending",
+          }),
+      createdAt: Date.now(),
+    });
+
+    return newSubmissionId;
+  },
+});
+
+// Reset a submission for retry
+export const resetForRetry = mutation({
+  args: {
+    id: v.id("submissions"),
+    resetType: v.union(v.literal("2d"), v.literal("mesh"), v.literal("both")),
+  },
+  handler: async (ctx, args) => {
+    const submission = await ctx.db.get(args.id);
+    if (!submission) {
+      throw new Error("Submission not found");
+    }
+
+    const updates: Record<string, unknown> = {};
+
+    if (args.resetType === "2d" || args.resetType === "both") {
+      updates.status = "pending";
+      updates.error = undefined;
+      updates.completedAt = undefined;
+      updates.resultImageId = undefined;
+    }
+
+    if (args.resetType === "mesh" || args.resetType === "both") {
+      updates.meshStatus = undefined;
+      updates.meshProgress = undefined;
+      updates.meshyTaskId = undefined;
+      updates.meshThumbnailUrl = undefined;
+      updates.modelUrls = undefined;
+      updates.meshError = undefined;
+      updates.meshCompletedAt = undefined;
+    }
+
+    await ctx.db.patch(args.id, updates);
+    return { success: true };
+  },
+});
+
+// Start polling for mesh generation (schedules first poll immediately)
+export const startMeshPolling = mutation({
+  args: {
+    submissionId: v.id("submissions"),
+    meshyTaskId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Update the submission with the meshyTaskId
+    await ctx.db.patch(args.submissionId, {
+      meshyTaskId: args.meshyTaskId,
+      meshStatus: "pending",
+      meshProgress: 0,
+    });
+
+    // Schedule the first poll immediately
+    await ctx.scheduler.runAfter(0, internal.meshPoller.pollMeshyOnce, {
+      submissionId: args.submissionId,
+      meshyTaskId: args.meshyTaskId,
+      startTime: Date.now(),
+    });
+  },
+});
+
+// Internal mutations for mesh polling (called by meshPoller action)
+export const updateMeshProgressInternal = internalMutation({
+  args: {
+    submissionId: v.id("submissions"),
+    progress: v.number(),
+    status: v.union(v.literal("pending"), v.literal("processing")),
+    thumbnailUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.submissionId, {
+      meshStatus: args.status,
+      meshProgress: args.progress,
+      ...(args.thumbnailUrl && { meshThumbnailUrl: args.thumbnailUrl }),
+    });
+  },
+});
+
+export const completeMeshInternal = internalMutation({
+  args: {
+    submissionId: v.id("submissions"),
+    thumbnailUrl: v.string(),
+    modelUrls: v.object({
+      glb: v.string(),
+      fbx: v.string(),
+      obj: v.string(),
+      usdz: v.string(),
+    }),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.submissionId, {
+      meshStatus: "completed",
+      meshProgress: 100,
+      meshThumbnailUrl: args.thumbnailUrl,
+      modelUrls: args.modelUrls,
+      meshCompletedAt: Date.now(),
+    });
+  },
+});
+
+export const failMeshInternal = internalMutation({
+  args: {
+    submissionId: v.id("submissions"),
+    error: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.submissionId, {
+      meshStatus: "failed",
+      meshError: args.error,
+      meshCompletedAt: Date.now(),
+    });
   },
 });
