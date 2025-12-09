@@ -345,12 +345,18 @@ export const startMeshPolling = mutation({
     meshyTaskId: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log(`[startMeshPolling] Starting`, {
+      submissionId: args.submissionId,
+      meshyTaskId: args.meshyTaskId,
+    });
+
     // Update the submission with the meshyTaskId
     await ctx.db.patch(args.submissionId, {
       meshyTaskId: args.meshyTaskId,
       meshStatus: "pending",
       meshProgress: 0,
     });
+    console.log(`[startMeshPolling] Patched submission`);
 
     // Schedule the first poll immediately
     await ctx.scheduler.runAfter(0, internal.meshPoller.pollMeshyOnce, {
@@ -358,6 +364,7 @@ export const startMeshPolling = mutation({
       meshyTaskId: args.meshyTaskId,
       startTime: Date.now(),
     });
+    console.log(`[startMeshPolling] Scheduled first poll`);
   },
 });
 
@@ -370,11 +377,17 @@ export const updateMeshProgressInternal = internalMutation({
     thumbnailUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    console.log(`[updateMeshProgressInternal] Called`, {
+      submissionId: args.submissionId,
+      progress: args.progress,
+      status: args.status,
+    });
     await ctx.db.patch(args.submissionId, {
       meshStatus: args.status,
       meshProgress: args.progress,
       ...(args.thumbnailUrl && { meshThumbnailUrl: args.thumbnailUrl }),
     });
+    console.log(`[updateMeshProgressInternal] Patched successfully`);
   },
 });
 
@@ -390,6 +403,9 @@ export const completeMeshInternal = internalMutation({
     }),
   },
   handler: async (ctx, args) => {
+    console.log(`[completeMeshInternal] Called`, {
+      submissionId: args.submissionId,
+    });
     await ctx.db.patch(args.submissionId, {
       meshStatus: "completed",
       meshProgress: 100,
@@ -397,6 +413,7 @@ export const completeMeshInternal = internalMutation({
       modelUrls: args.modelUrls,
       meshCompletedAt: Date.now(),
     });
+    console.log(`[completeMeshInternal] Patched successfully`);
   },
 });
 
@@ -406,10 +423,15 @@ export const failMeshInternal = internalMutation({
     error: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log(`[failMeshInternal] Called`, {
+      submissionId: args.submissionId,
+      error: args.error,
+    });
     await ctx.db.patch(args.submissionId, {
       meshStatus: "failed",
       meshError: args.error,
       meshCompletedAt: Date.now(),
     });
+    console.log(`[failMeshInternal] Patched successfully`);
   },
 });

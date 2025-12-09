@@ -66,9 +66,17 @@ export const pollMeshyOnce = internalAction({
   handler: async (ctx, args) => {
     const { submissionId, meshyTaskId, startTime } = args;
     const elapsedMs = Date.now() - startTime;
+    const elapsedSec = Math.round(elapsedMs / 1000);
+
+    console.log(`[meshPoller] Polling started`, {
+      submissionId,
+      meshyTaskId,
+      elapsedSec,
+    });
 
     // Check if we've exceeded max polling time
     if (elapsedMs > MAX_POLLING_TIME_MS) {
+      console.log(`[meshPoller] TIMEOUT after ${elapsedSec}s`, { submissionId });
       await ctx.runMutation(internal.submissions.failMeshInternal, {
         submissionId,
         error: "Mesh generation timed out after 1 hour",
@@ -77,7 +85,17 @@ export const pollMeshyOnce = internalAction({
     }
 
     try {
+      console.log(`[meshPoller] Fetching Meshy status...`, { meshyTaskId });
       const status = await getMeshyTaskStatus(meshyTaskId);
+
+      console.log(`[meshPoller] Meshy response`, {
+        submissionId,
+        meshyStatus: status.status,
+        progress: status.progress,
+        hasThumbnail: !!status.thumbnail_url,
+        hasModelUrls: !!status.model_urls?.glb,
+        error: status.task_error?.message,
+      });
 
       // Map Meshy status to our status
       const convexStatus =
@@ -90,7 +108,7 @@ export const pollMeshyOnce = internalAction({
               : "failed";
 
       if (status.status === "SUCCEEDED") {
-        // Complete - store the model URLs
+        console.log(`[meshPoller] SUCCESS - completing`, { submissionId });
         await ctx.runMutation(internal.submissions.completeMeshInternal, {
           submissionId,
           thumbnailUrl: status.thumbnail_url,
@@ -101,10 +119,15 @@ export const pollMeshyOnce = internalAction({
             usdz: status.model_urls.usdz,
           },
         });
+        console.log(`[meshPoller] Completed successfully`, { submissionId });
         return;
       }
 
       if (status.status === "FAILED" || status.status === "CANCELED") {
+        console.log(`[meshPoller] FAILED/CANCELED`, {
+          submissionId,
+          error: status.task_error?.message,
+        });
         await ctx.runMutation(internal.submissions.failMeshInternal, {
           submissionId,
           error: status.task_error?.message || "Mesh generation failed",
@@ -113,6 +136,11 @@ export const pollMeshyOnce = internalAction({
       }
 
       // Still processing - update progress and schedule next poll
+      console.log(`[meshPoller] Updating progress`, {
+        submissionId,
+        progress: status.progress,
+        status: convexStatus,
+      });
       await ctx.runMutation(internal.submissions.updateMeshProgressInternal, {
         submissionId,
         progress: status.progress,
@@ -122,24 +150,42 @@ export const pollMeshyOnce = internalAction({
 
       // Schedule next poll with backoff
       const nextInterval = getNextInterval(elapsedMs);
+      console.log(`[meshPoller] Scheduling next poll`, {
+        submissionId,
+        nextIntervalMs: nextInterval,
+        nextIntervalSec: Math.round(nextInterval / 1000),
+      });
       await ctx.scheduler.runAfter(nextInterval, internal.meshPoller.pollMeshyOnce, {
         submissionId,
         meshyTaskId,
         startTime,
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error(`[meshPoller] ERROR`, {
+        submissionId,
+        meshyTaskId,
+        elapsedSec,
+        error: errorMessage,
+      });
+
       // On error, still try to schedule next poll (might be transient)
       // But if we've been polling for a while, just fail
       if (elapsedMs > 10 * 60 * 1000) {
+        console.log(`[meshPoller] Giving up after error (elapsed > 10min)`, { submissionId });
         await ctx.runMutation(internal.submissions.failMeshInternal, {
           submissionId,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: errorMessage,
         });
         return;
       }
 
       // Transient error - schedule retry
       const nextInterval = getNextInterval(elapsedMs);
+      console.log(`[meshPoller] Transient error, retrying`, {
+        submissionId,
+        nextIntervalSec: Math.round(nextInterval / 1000),
+      });
       await ctx.scheduler.runAfter(nextInterval, internal.meshPoller.pollMeshyOnce, {
         submissionId,
         meshyTaskId,
